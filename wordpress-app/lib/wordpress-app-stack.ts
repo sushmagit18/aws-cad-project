@@ -4,6 +4,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
+import { aws_autoscaling as autoscaling } from 'aws-cdk-lib';
 import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 
 
@@ -43,7 +44,7 @@ export class WordpressAppStack extends cdk.Stack {
       versionDescription: "v1",
       launchTemplateData: {
         instanceType: 't2.micro',
-        imageId: "ami-0d1e3f2707b2b8925",
+        imageId: "ami-0f214d1b3d031dc53",
         userData: cdk.Fn.base64(EC2UserData),
         
         securityGroupIds: [cdk.Fn.importValue("Application-EC2-SG-ID")],
@@ -87,10 +88,63 @@ export class WordpressAppStack extends cdk.Stack {
     });
 
     //AUTOSCALING GROUP
+    const cfnAutoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, 'MyCfnAutoScalingGroup', {
+      maxSize: '20',
+      minSize: '2',
+    
+      // the properties below are optional
+      autoScalingGroupName: 'Wordpress-ASG',
+      desiredCapacity: '2',
+      healthCheckType: 'EC2',
+      launchTemplate: {
+        version: ec2LaunchTemplate.attrLatestVersionNumber,
+        launchTemplateId: ec2LaunchTemplate.attrLaunchTemplateId,
+      },
+      targetGroupArns: [cfnTargetGroup.attrTargetGroupArn],
+      vpcZoneIdentifier: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
+    });
 
+    const cfnScalingPolicy = new autoscaling.CfnScalingPolicy(this, 'MyCfnScalingPolicy', {
+      autoScalingGroupName: cfnAutoScalingGroup.ref,
+      policyType: 'TargetTrackingScaling',
+      targetTrackingConfiguration: {
+        targetValue: 60,
+        disableScaleIn: false,
+        predefinedMetricSpecification: {
+          predefinedMetricType: 'ASGAverageCPUUtilization',
+        },
+      },
+    });
+
+
+    
+    // const cfnScalingPolicy = new autoscaling.CfnScalingPolicy(this, 'MyCfnScalingPolicy', {
+    //   autoScalingGroupName: 'Wordpress-ASG',
+    //   policyType: 'TargetTrackingScaling',
+    //   targetTrackingConfiguration: {
+    //     targetValue: 60,
+    //     disableScaleIn: false,
+    //     predefinedMetricSpecification: {
+    //       predefinedMetricType: 'ASGAverageCPUUtilization',
+    //     },
+    //   },
+    // });
 
     //RDS Instance
-
+    // const iopsInstance = new rds.DatabaseInstance(this, 'IopsInstance', {
+    //   engine: rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_39 }),
+    //   vpc,
+    //   storageType: rds.StorageType.IO1,
+    //   iops: 5000,
+    // });
+    
+    // const gp3Instance = new rds.DatabaseInstance(this, 'Gp3Instance', {
+    //   engine: rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_39 }),
+    //   vpc,
+    //   allocatedStorage: 500,
+    //   storageType: rds.StorageType.GP3,
+    //   storageThroughput: 500, // only applicable for GP3
+    // });
   }
 }
     
