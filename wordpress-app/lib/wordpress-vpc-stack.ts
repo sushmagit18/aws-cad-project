@@ -73,8 +73,8 @@ new cdk.CfnOutput(this, 'EC2SGOutput', {
       vpc: customVpc
     });
     
-    ec2SecurityGroup.addIngressRule(
-      ec2.Peer.ipv4("0.0.0.0/0"),
+    rdsSecurityGroup.addIngressRule(
+      ec2SecurityGroup,
       ec2.Port.tcp(3306)
    )
 
