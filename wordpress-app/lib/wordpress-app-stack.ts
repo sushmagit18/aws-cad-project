@@ -45,7 +45,8 @@ export class WordpressAppStack extends cdk.Stack {
         instanceType: 't2.micro',
         imageId: "ami-0d1e3f2707b2b8925",
         userData: cdk.Fn.base64(EC2UserData),
-        securityGroupIds: ["sg-0c4a939d1e1367d43"],
+        
+        securityGroupIds: [cdk.Fn.importValue("Application-EC2-SG-ID")],
       },
     });
 
@@ -55,15 +56,41 @@ export class WordpressAppStack extends cdk.Stack {
       ipAddressType: 'ipv4',
       scheme: 'internet-facing',
       name: 'Wordpress-ALB',
-      securityGroups: ['sg-08c08a2f624aea703'],
+      securityGroups: [cdk.Fn.importValue("Application-EC2-SG-ID")],
       subnets: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
       type: 'application',
     });
-   
+
+        //Target Group
+        const cfnTargetGroup = new elbv2.CfnTargetGroup(this, 'MyCfnTargetGroup', /* all optional props */ {
+          healthCheckEnabled: true,
+          healthCheckPath: '/healthy.html',
+          healthCheckPort: '80',
+          healthCheckProtocol: 'HTTP',
+          name: 'Wordpress-ALB-TG',
+          port: 80,
+          protocol: 'HTTP',
+          targetType: 'instance',
+          vpcId: cdk.Fn.importValue("Application-VPC-ID"),
+        });
+
+    //listener
+    const cfnListener = new elbv2.CfnListener(this, 'MyCfnListener', {
+      defaultActions: [{
+        type: 'forward',
+        targetGroupArn: cfnTargetGroup.attrTargetGroupArn,
+      }],
+      loadBalancerArn: wordpressALB.attrLoadBalancerArn,
+      port: 80,
+      protocol: 'HTTP',
+      
+    });
 
     //AUTOSCALING GROUP
+
 
     //RDS Instance
 
   }
 }
+    
