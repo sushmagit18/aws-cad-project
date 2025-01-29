@@ -25,6 +25,8 @@ export class WordpressAppStack extends cdk.Stack {
     const EC2UserData = `
       #!/bin/bash
       echo "Running custom user data script"
+      amazon-linux-extras enable php7.4
+      sudo yum install -y php php-cli php-fpm php-mysqlnd php-xml php-mbstring php-curl php-zip
       yum install httpd php php-mysql -y
       yum update -y
       cd /var/www/html
@@ -130,21 +132,25 @@ export class WordpressAppStack extends cdk.Stack {
     //   },
     // });
 
-    //RDS Instance
-    // const iopsInstance = new rds.DatabaseInstance(this, 'IopsInstance', {
-    //   engine: rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_39 }),
-    //   vpc,
-    //   storageType: rds.StorageType.IO1,
-    //   iops: 5000,
-    // });
-    
-    // const gp3Instance = new rds.DatabaseInstance(this, 'Gp3Instance', {
-    //   engine: rds.DatabaseInstanceEngine.mysql({ version: rds.MysqlEngineVersion.VER_8_0_39 }),
-    //   vpc,
-    //   allocatedStorage: 500,
-    //   storageType: rds.StorageType.GP3,
-    //   storageThroughput: 500, // only applicable for GP3
-    // });
+    //CDK for RDS Instance
+    const wordpressRDS = new rds.CfnDBInstance(this, "WordpressRDS", {
+      dbInstanceIdentifier: "wordpress-db",
+      engine: "mysql",
+      dbInstanceClass: "db.t3.micro", 
+      allocatedStorage: "20", 
+      masterUsername: "admin", 
+      masterUserPassword: "Metro123456", 
+      dbSubnetGroupName: cdk.Fn.importValue('Application-RDS-SUBNET-GROUP-NAME'),
+      vpcSecurityGroups:[cdk.Fn.importValue('Application-RDS')],
+      publiclyAccessible: false,
+      backupRetentionPeriod: 7,
+      multiAz: false, 
+    });
+    new cdk.CfnOutput(this, "RDSInstanceEndpoint", {
+      value: wordpressRDS.attrEndpointAddress,
+    });
+
+
   }
 }
     
