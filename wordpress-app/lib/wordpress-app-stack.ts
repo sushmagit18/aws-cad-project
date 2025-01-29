@@ -63,6 +63,10 @@ export class WordpressAppStack extends cdk.Stack {
       subnets: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
       type: 'application',
     });
+    new cdk.CfnOutput(this, "ALBDNSName", {
+      value: wordpressALB.attrDnsName,
+      exportName: "Wordpress-ALB-DNS"
+    });
 
         //Target Group
         const cfnTargetGroup = new elbv2.CfnTargetGroup(this, 'MyCfnTargetGroup', /* all optional props */ {
