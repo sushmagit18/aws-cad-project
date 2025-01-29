@@ -8,15 +8,8 @@ export class WordpressvpcStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'WordpressAppQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-
     //VPC with SSM Param
-    const customVpc = new ec2.Vpc(this, 'customVpc', {
+    const customVpc = new ec2.Vpc(this, 'CustomVPC', {
       ipAddresses: ec2.IpAddresses.cidr('10.50.0.0/16'),
       createInternetGateway: true,
     });
@@ -34,23 +27,8 @@ export class WordpressvpcStack extends cdk.Stack {
       exportName: 'Application-PUBLIC-SUBNET-IDS',
     });
 
-
-
-    // const cfnParameterVPCID = new ssm.CfnParameter(this, 'VPCIDCfnParameter', {
-    //   type: 'String',
-    //   name: '/AWS/CAD/VPC/ID',
-    //   value: customVpc.vpcId,
-     
-
-    // });
-
-  //   const ssmVPC = new ssm.StringParameter(this, 'vpcSsmParameter', {
-  //     parameterName: '/AWS/CAD/VPC/ID',
-  //     stringValue: customVpc.vpcId,
-  //  });
-
     //SG-ALB with SSM Param
-    const albSecurityGroup = new ec2.SecurityGroup(this, 'ALBEC2SecurityGroup', { 
+    const albSecurityGroup = new ec2.SecurityGroup(this, 'ALBSecurityGroup', { 
       vpc: customVpc
     });
     
@@ -67,13 +45,6 @@ export class WordpressvpcStack extends cdk.Stack {
   value: albSecurityGroup.securityGroupId,
   exportName: 'Application-ALB-SG-ID', // optional if you want to share this output across stacks
 });
-
-//  const ssmALBSecurityGroup = new ssm.StringParameter(this, 'albSGSsmParameter', {
-//   parameterName: '/AWS/CAD/ALB/SG/ID',
-//   stringValue: albSecurityGroup.securityGroupId,
-// });
-
-
 
     //SG-EC2 with SSM Param
     const ec2SecurityGroup = new ec2.SecurityGroup(this, 'EC2SecurityGroup', { 
@@ -96,11 +67,6 @@ new cdk.CfnOutput(this, 'EC2SGOutput', {
   value: ec2SecurityGroup.securityGroupId,
   exportName: 'Application-EC2-SG-ID', // optional if you want to share this output across stacks
 });
-//  const ssmEC2SG = new ssm.StringParameter(this, 'ec2SGSsmParameter', {
-//   parameterName: '/AWS/CAD/EC2/SG/ID',
-//   stringValue: ec2SecurityGroup.securityGroupId,
-// });
-
 
     //SG-RDS with SSM Param
     const rdsSecurityGroup = new ec2.SecurityGroup(this, 'RDSSecurityGroup', { 
@@ -116,12 +82,6 @@ new cdk.CfnOutput(this, 'EC2SGOutput', {
     value: rdsSecurityGroup.securityGroupId,
     exportName: 'Application-RDS', // optional if you want to share this output across stacks
   });
-  
-//  const ssmRDSSG = new ssm.StringParameter(this, 'rdsSGSsmParameter', {
-//   parameterName: '/AWS/CAD/RDS/SG/ID',
-//   stringValue: rdsSecurityGroup.securityGroupId,
-// });
-
 
     //SG-Subnet-Group with SSM Param
     
@@ -129,8 +89,6 @@ new cdk.CfnOutput(this, 'EC2SGOutput', {
       description: 'RDS SubnetGroup',
       vpc: customVpc,
     
-      // the properties below are optional
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
       subnetGroupName: 'RDS-SUBNET-GROUP',
       vpcSubnets: {
        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
@@ -141,14 +99,5 @@ new cdk.CfnOutput(this, 'EC2SGOutput', {
       value: rdssubnetGroup.subnetGroupName,
       exportName: 'Application-RDS-SUBNET-GROUP-NAME', // optional if you want to share this output across stacks
     });
-    // const ssmRDSSubnetGroup = new ssm.StringParameter(this, 'RDSSubnetGroupSsmParameter', {
-    //   parameterName: '/AWS/CAD/RDS/SUBNET/GROUP',
-    //   stringValue: rdssubnetGroup.subnetGroupName,
-    // });
-
-
-
-
-
   }
 }

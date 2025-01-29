@@ -5,22 +5,13 @@ import * as ssm from 'aws-cdk-lib/aws-ssm';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import { aws_autoscaling as autoscaling } from 'aws-cdk-lib';
-import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
-
-
+//import { AutoScalingGroup } from 'aws-cdk-lib/aws-autoscaling';
 
 export class WordpressAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'WordpressAppQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
-
-    // CDK Code for Launch Template with Userdata
+    //Launch Template with Userdata
     
     const EC2UserData = `
       #!/bin/bash
@@ -41,6 +32,7 @@ export class WordpressAppStack extends cdk.Stack {
       service httpd start
       chkconfig httpd on
     `;
+
     const ec2LaunchTemplate = new ec2.CfnLaunchTemplate(this, 'EC2LaunchTemplate', {
       launchTemplateName: "Wordpress-Launch-Template",
       versionDescription: "v1",
@@ -48,18 +40,16 @@ export class WordpressAppStack extends cdk.Stack {
         instanceType: 't2.micro',
         imageId: "ami-0f214d1b3d031dc53",
         userData: cdk.Fn.base64(EC2UserData),
-        
         securityGroupIds: [cdk.Fn.importValue("Application-EC2-SG-ID")],
       },
     });
-
 
     //ALB Load Balancer
     const wordpressALB = new elbv2.CfnLoadBalancer(this, 'WordpressALB', /* all optional props */ {
       ipAddressType: 'ipv4',
       scheme: 'internet-facing',
       name: 'Wordpress-ALB',
-      securityGroups: [cdk.Fn.importValue("Application-EC2-SG-ID")],
+      securityGroups: [cdk.Fn.importValue("Application-ALB-SG-ID")],
       subnets: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
       type: 'application',
     });
@@ -67,19 +57,18 @@ export class WordpressAppStack extends cdk.Stack {
       value: wordpressALB.attrDnsName,
       exportName: "Wordpress-ALB-DNS"
     });
-
-        //Target Group
-        const cfnTargetGroup = new elbv2.CfnTargetGroup(this, 'MyCfnTargetGroup', /* all optional props */ {
-          healthCheckEnabled: true,
-          healthCheckPath: '/healthy.html',
-          healthCheckPort: '80',
-          healthCheckProtocol: 'HTTP',
-          name: 'Wordpress-ALB-TG',
-          port: 80,
-          protocol: 'HTTP',
-          targetType: 'instance',
-          vpcId: cdk.Fn.importValue("Application-VPC-ID"),
-        });
+    //Target Group
+    const cfnTargetGroup = new elbv2.CfnTargetGroup(this, 'MyCfnTargetGroup', /* all optional props */ {
+      healthCheckEnabled: true,
+      healthCheckPath: '/healthy.html',
+      healthCheckPort: '80',
+      healthCheckProtocol: 'HTTP',
+      name: 'Wordpress-ALB-TG',
+      port: 80,
+      protocol: 'HTTP',
+      targetType: 'instance',
+      vpcId: cdk.Fn.importValue("Application-VPC-ID"),
+      });
 
     //listener
     const cfnListener = new elbv2.CfnListener(this, 'MyCfnListener', {
@@ -97,8 +86,6 @@ export class WordpressAppStack extends cdk.Stack {
     const cfnAutoScalingGroup = new autoscaling.CfnAutoScalingGroup(this, 'MyCfnAutoScalingGroup', {
       maxSize: '20',
       minSize: '2',
-    
-      // the properties below are optional
       autoScalingGroupName: 'Wordpress-ASG',
       desiredCapacity: '2',
       healthCheckType: 'EC2',
@@ -122,24 +109,11 @@ export class WordpressAppStack extends cdk.Stack {
       },
     });
 
-
-    
-    // const cfnScalingPolicy = new autoscaling.CfnScalingPolicy(this, 'MyCfnScalingPolicy', {
-    //   autoScalingGroupName: 'Wordpress-ASG',
-    //   policyType: 'TargetTrackingScaling',
-    //   targetTrackingConfiguration: {
-    //     targetValue: 60,
-    //     disableScaleIn: false,
-    //     predefinedMetricSpecification: {
-    //       predefinedMetricType: 'ASGAverageCPUUtilization',
-    //     },
-    //   },
-    // });
-
     //CDK for RDS Instance
     const wordpressRDS = new rds.CfnDBInstance(this, "WordpressRDS", {
       dbInstanceIdentifier: "wordpress-db",
       engine: "mysql",
+      engineVersion: '8.0.40',
       dbInstanceClass: "db.t3.micro", 
       allocatedStorage: "20", 
       masterUsername: "admin", 
@@ -148,13 +122,12 @@ export class WordpressAppStack extends cdk.Stack {
       vpcSecurityGroups:[cdk.Fn.importValue('Application-RDS')],
       publiclyAccessible: false,
       backupRetentionPeriod: 7,
-      multiAz: false, 
+      multiAz: false,
+      dbName: "metrodb" 
     });
     new cdk.CfnOutput(this, "RDSInstanceEndpoint", {
       value: wordpressRDS.attrEndpointAddress,
     });
-
-
   }
 }
     
