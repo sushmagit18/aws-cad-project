@@ -19,13 +19,30 @@ export class WordpressvpcStack extends cdk.Stack {
       exportName: 'Application-VPC-ID', // optional if you want to share this output across stacks
     });
 
-    const publicSubnetIds = customVpc.publicSubnets.map(subnet => subnet.subnetId);
+    const publicSubnets = customVpc.publicSubnets;
 
-    // Output the public subnet IDs
-    new cdk.CfnOutput(this, 'CustomVPCPublicSubnetIds', {
-      value: JSON.stringify(publicSubnetIds),
-      exportName: 'Application-PUBLIC-SUBNET-IDS',
+    new cdk.CfnOutput(this, 'PublicSubnetID1Output', {
+      value: publicSubnets[0].subnetId,
+      exportName: 'Public-Subnet1-ID',
     });
+
+    new cdk.CfnOutput(this, 'PublicSubnetID2Output', {
+      value: publicSubnets[1].subnetId,
+      exportName: 'Public-Subnet2-ID',
+    });
+
+    const privateSubnets = customVpc.privateSubnets;
+
+    new cdk.CfnOutput(this, 'PrivateSubnetID1Output', {
+      value: privateSubnets[0].subnetId,
+      exportName: 'Private-Subnet1-ID',
+    });
+
+    new cdk.CfnOutput(this, 'PrivateSubnetID2Output', {
+      value: privateSubnets[1].subnetId,
+      exportName: 'Private-Subnet2-ID',
+    });
+
 
     //SG-ALB with SSM Param
     const albSecurityGroup = new ec2.SecurityGroup(this, 'ALBSecurityGroup', { 

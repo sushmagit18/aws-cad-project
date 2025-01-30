@@ -39,7 +39,7 @@ export class WordpressAppStack extends cdk.Stack {
       scheme: 'internet-facing',
       name: 'Wordpress-ALB',
       securityGroups: [cdk.Fn.importValue("Application-ALB-SG-ID")],
-      subnets: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
+      subnets: [cdk.Fn.importValue("Public-Subnet1-ID"), cdk.Fn.importValue("Public-Subnet2-ID")],
       type: 'application',
     });
     new cdk.CfnOutput(this, "ALBDNSName", {
@@ -127,7 +127,7 @@ export class WordpressAppStack extends cdk.Stack {
         launchTemplateId: ec2LaunchTemplate.attrLaunchTemplateId,
       },
       targetGroupArns: [cfnTargetGroup.attrTargetGroupArn],
-      vpcZoneIdentifier: ['subnet-01c45087073ddd334', 'subnet-0f1e58e636848e867'],
+      vpcZoneIdentifier: [cdk.Fn.importValue("Private-Subnet1-ID"), cdk.Fn.importValue("Private-Subnet2-ID")],
     });
 
     const cfnScalingPolicy = new autoscaling.CfnScalingPolicy(this, 'MyCfnScalingPolicy', {
