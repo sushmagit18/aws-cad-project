@@ -1,42 +1,32 @@
-version: 0.2
 
-env:
-  variables:
-    ACTION: "apply"                               
+version: 0.2
 
 phases:
   install:
     runtime-versions:
       nodejs: 18
     commands:
-      - echo "Installing AWS CDK CLI..."
-      - ls -l
       - cd wordpress-app
-      - npm install -g aws-cdk  
-      - npm install             
-      - npm version
+      - npm install -g aws-cdk
+      - npm install
+
+  pre_build:
+    commands:
+      - npm run test
 
   build:
     commands:
-      - echo "Building TypeScript code..."
-      - npm run build     
-      - echo "Synthesizing CloudFormation template..."
-      - cdk synth   
-      - ls -l 
-
+      - npm run build
+      - cdk synth
 
   post_build:
     commands:
-      - |
-        if [ "$ACTION" == "apply" ]; then
-          echo "Deploying CDK stack..."
-          cdk deploy --require-approval never 
+      - cdk deploy --context stack=V --require-approval never
 
-        elif [ "$ACTION" == "destroy" ]; then
-          echo "Destroying CDK stack..."
-          cdk destroy --force
-
-        else
-          echo "Invalid ACTION parameter. Use 'apply' or 'destroy'."
-          exit 1
-        fi
+artifacts:
+  files:
+    - cdk.out/**/*
+    - package.json
+    - package-lock.json
+    - README.md
+  discard-paths: yes
