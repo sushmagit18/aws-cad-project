@@ -2,47 +2,41 @@ version: 0.2
 
 env:
   variables:
-    CDK_STACK_NAME: "CDKStack" # Replace with your stack
-    CDK_REGION: "us-east-1" # AWS region name
-    ACTION: "deploy" # Default action: 'deploy' or 'destroy'
+    CDK_STACK_NAME: "WordpressAppStack" # CDK stack name
+    ACTION: "apply" # Default action
 
 phases:
   install:
     runtime-versions:
       nodejs: 18
     commands:
-      - cd wordpress-app/buidspec.yml
-version: 0.2
-      - echo "Installing AWS CDK and dependencies..."
+      - echo "Installing AWS CDK CLI..."
+      - ls -l
+      - cd wordpress-app
       - npm install -g aws-cdk
-      - cdk --version
-      - echo "Installing project dependencies..."
       - npm install
-
-  pre_build:
-    commands:
-      - echo "Configuring AWS CLI..."
-      - aws sts get-caller-identity
-      - echo "Bootstrapping CDK if required..."
-      - cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/$CDK_REGION
+      - npm version
 
   build:
     commands:
-      - |
-        if [ "$ACTION" == "deploy" ]; then
-          echo "Synthesizing CDK App..."
-          cdk synth
-          cdk diff $CDK_STACK_NAME
-          echo "Deploying CDK Stack..."
-          cdk deploy $CDK_STACK_NAME --require-approval never
-        elif [ "$ACTION" == "destroy" ]; then
-          echo "Destroying CDK Stack..."
-          cdk destroy $CDK_STACK_NAME --force
-        else
-          echo "Invalid ACTION parameter. Use 'deploy' or 'destroy'."
-          exit 1
-        fi
+      - echo "Building Typescript code..."
+      - npm run build
+      - echo "Synthesizing CloudFormation template..."
+      - cdk synth
+      - cdk -l
 
   post_build:
     commands:
-      - echo "CDK operation ($ACTION) completed successfully."
+      - |
+        if [ "$ACTION" == "apply" ]; then
+          echo "Deploying CDK stack..."
+          cdk deploy --require-approval never
+
+        elif [ "$ACTION" == "destroy" ]; then
+          echo "Destroying CDK Stack..."
+          cdk destroy --force
+
+        else
+          echo "Invalid ACTION parameter. Use 'apply' or 'destroy'."
+          exit 1
+        fi
