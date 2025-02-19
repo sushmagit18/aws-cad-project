@@ -15,7 +15,7 @@ phases:
       - npm install -g aws-cdk
       - cdk --version
       - echo "Installing project dependencies..."
-      - pip install -r requirements.txt
+      - npm install
 
   pre_build:
     commands:
