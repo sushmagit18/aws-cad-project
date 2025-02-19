@@ -21,12 +21,4 @@ phases:
 
   post_build:
     commands:
-      - cdk deploy --context stack=V --require-approval never
-
-artifacts:
-  files:
-    - cdk.out/**/*
-    - package.json
-    - package-lock.json
-    - README.md
-  discard-paths: yes
+      - cdk deploy --require-approval never
