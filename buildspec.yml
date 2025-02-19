@@ -19,7 +19,7 @@ phases:
   build:
     commands:
       - echo "Building TypeScript code..."
-      - npm run build           
+      - npm run build     
       - echo "Synthesizing CloudFormation template..."
       - cdk synth   
       - ls -l 
