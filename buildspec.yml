@@ -1,0 +1,45 @@
+version: 0.2
+
+env:
+  variables:
+    CDK_STACK_NAME: "CDKStack" # Replace with your stack name
+    CDK_REGION: "us-east-1" # AWS region name
+    ACTION: "deploy" # Default action: 'deploy' or 'destroy'
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo "Installing AWS CDK and dependencies..."
+      - npm install -g aws-cdk
+      - cdk --version
+      - echo "Installing project dependencies..."
+      - npm install
+
+  pre_build:
+    commands:
+      - echo "Configuring AWS CLI..."
+      - aws sts get-caller-identity
+      - echo "Bootstrapping CDK if required..."
+      - cdk bootstrap aws://$(aws sts get-caller-identity --query Account --output text)/$CDK_REGION
+
+  build:
+    commands:
+      - |
+        if [ "$ACTION" == "deploy" ]; then
+          echo "Synthesizing CDK App..."
+          cdk synth
+          echo "Deploying CDK Stack..."
+          cdk deploy $CDK_STACK_NAME --require-approval never
+        elif [ "$ACTION" == "destroy" ]; then
+          echo "Destroying CDK Stack..."
+          cdk destroy $CDK_STACK_NAME --force
+        else
+          echo "Invalid ACTION parameter. Use 'deploy' or 'destroy'."
+          exit 1
+        fi
+
+  post_build:
+    commands:
+      - echo "CDK operation ($ACTION) completed successfully."
