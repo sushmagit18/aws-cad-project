@@ -31,6 +31,7 @@ phases:
         if [ "$ACTION" == "deploy" ]; then
           echo "Synthesizing CDK App..."
           cdk synth
+          cdk diff $CDK_STACK_NAME
           echo "Deploying CDK Stack..."
           cdk deploy $CDK_STACK_NAME --require-approval never
         elif [ "$ACTION" == "destroy" ]; then
