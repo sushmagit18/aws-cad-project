@@ -2,7 +2,6 @@ version: 0.2
 
 env:
   variables:
-    CDK_STACK_NAME: "WordpressAppStack" # CDK stack name
     ACTION: "apply" # Default action
 
 phases:
