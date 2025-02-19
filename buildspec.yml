@@ -23,7 +23,7 @@ phases:
       - npm run build
       - echo "Synthesizing CloudFormation template..."
       - cdk synth
-      - cdk -l
+      - ls -l
 
   post_build:
     commands:
