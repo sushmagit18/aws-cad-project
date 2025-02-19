@@ -103,7 +103,7 @@ export class WordpressAppStack extends cdk.Stack {
     `;
 
     const ec2LaunchTemplate = new ec2.CfnLaunchTemplate(this, 'EC2LaunchTemplate', {
-      launchTemplateName: "Wordpress-Launch-Template",
+      // launchTemplateName: "Wordpress-Launch-Template",
       versionDescription: "v1",
       launchTemplateData: {
         instanceType: 't2.micro',
