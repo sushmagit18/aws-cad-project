@@ -8,7 +8,7 @@ const app = new cdk.App();
 
 const vpcDeployment = true;
 
-const deployment = { "stack" : "V" } 
+const deployment = { "stack" : "A" } 
 
 if (['V'].includes(deployment.stack)) {
     new WordpressvpcStack(app, 'WordpressvpcStack', {
