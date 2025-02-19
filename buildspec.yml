@@ -2,7 +2,7 @@ version: 0.2
 
 env:
   variables:
-    CDK_STACK_NAME: "CDKStack" # Replace with your stack name
+    CDK_STACK_NAME: "CDKStack" # Replace with your stack
     CDK_REGION: "us-east-1" # AWS region name
     ACTION: "deploy" # Default action: 'deploy' or 'destroy'
 
