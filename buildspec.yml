@@ -11,7 +11,8 @@ phases:
     runtime-versions:
       nodejs: 18
     commands:
-      - cd wordpress-app
+      - cd wordpress-app/buidspec.yml
+version: 0.2
       - echo "Installing AWS CDK and dependencies..."
       - npm install -g aws-cdk
       - cdk --version
