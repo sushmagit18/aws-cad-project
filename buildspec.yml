@@ -22,3 +22,4 @@ phases:
   post_build:
     commands:
       - cdk deploy --require-approval never
+      - echo "Deployment completed successfully!"
